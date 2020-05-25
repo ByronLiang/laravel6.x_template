@@ -12,8 +12,6 @@
 
 - [MySQL](https://dev.mysql.com/doc/refman/5.7/en/installing.html) >= 5.7.8
 
-- [NodeJS](https://nodejs.org/en/) >= 8
-
 - [window 专用 Laragon](https://sourceforge.net/projects/laragon/)[使用文档](http://laravelacademy.org/post/7754.html)
 
 
@@ -67,7 +65,7 @@ php artisan key:generate
 
 - 访问 {url}:8000/ 到首页
 
-## 运行数据库操作命令
+### 运行数据库操作命令
 
 ```sh
 # 往数据库增加表以及填充数据
@@ -76,3 +74,21 @@ php artisan migrate --seed
 # 重置数据库表结构以及填充数据
 php artisan migrate:refresh --seed
 ```
+
+## 服务配置
+
+### 队列设置
+
+1. 在root下安装supervisor：`apt install supervisor`
+
+2. 将`.supervisor.conf`复制到`/etc/supervisor/conf.d/`下，请先确认文件中配置的项目路径和执行用户组都是对的
+    - cp .supervisor.conf /etc/supervisor/conf.d/[项目名称或者进程名称].conf
+    - 提供多进程配置文件参考`.multiple-supervisor.conf`
+    - `[program:job-worker]`里`job-worker`修改为`项目名称或者进程名称`
+    - 配置项目目录(`directory`)与进程日志路径(`stdout_logfile`) 以及进程用户(`user`)
+
+3. 在root下执行`supervisorctl update`
+
+4. 默认不自动启动进程; 执行`supervisorctl start 进程名称` / `supervisorctl status` 查看进程名称与状态
+
+5. 检查进程`ps -ef|grep queue|grep -v grep`中是否有laravel queue队列进程
