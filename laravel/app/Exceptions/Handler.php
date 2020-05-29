@@ -50,6 +50,33 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if ($request->expectsJson() || 'api' == request()->segment(1)) {
+            if ($exception instanceof \Illuminate\Auth\AuthenticationException) {
+                return \Response::error('请登录后继续', 401);
+            }
+
+            if ($exception instanceof \Illuminate\Validation\ValidationException) {
+                return \Response::error(array_first(array_first($exception->errors())), 422, $exception->errors());
+            }
+
+            if ($exception instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+                return \Response::error('Gone 数据不存在', 410);
+            }
+
+            if ($exception instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                return \Response::error('Not Found 地址不存在', 404);
+            }
+
+            if ($exception instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+                return \Response::error($exception->getMessage(), $exception->getStatusCode() ?: 500);
+            }
+            if ($exception instanceof \App\Exceptions\CommonException) {
+                return \Response::error($exception->getMessage(), 400);
+            }
+            
+            return $this->prepareJsonResponse($request, $this->prepareException($exception));
+        }
+        
         return parent::render($request, $exception);
     }
 }
